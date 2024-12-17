@@ -5,9 +5,7 @@ require("dotenv").config()
 
 const pool = new Pool(
   {
-    // TODO: Enter PostgreSQL username
     user: process.env.USER_NAME,
-    // TODO: Enter PostgreSQL password
     password: process.env.PASSWORD,
     host: 'localhost',
     database: process.env.DBNAME
@@ -18,9 +16,6 @@ const pool = new Pool(
 pool.connect(() => {
   mainMenu()
 });
-
-//view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
-
 
 function mainMenu() {
   inquirer.prompt([
@@ -43,6 +38,15 @@ function mainMenu() {
       }
       else if (response.menu === "update an employee role") {
         updateEmployeRole()
+      }
+      else if (response.menu === "add a department") {
+        addDepartment()
+      }
+      else if (response.menu === "add a role") {
+        addRole()
+      }
+      else if (response.menu === "view all roles") {
+        viewRoles()
       }
     })
 }
@@ -152,4 +156,79 @@ function viewDepartments() {
     printTable(rows)
     mainMenu()
   })
+}
+
+function addDepartment() {
+  pool.query("SELECT * FROM department", (err, { rows }) => {
+    inquirer.prompt([
+      {
+        type: "input",
+        message: "What is the name of the department?",
+        name: "name",
+        validate: (input) => {
+          if (input.trim() === "") {
+            return "Please enter a valid department name.";
+          }
+          return true;
+        }
+      }
+    ])
+    .then(res => {
+      pool.query(`INSERT INTO department (name) VALUES ('${res.name}')`, (err) => {
+        console.log("New department has been added into system!");
+        mainMenu();
+      });
+    });
+  })
+}
+
+function addRole() {
+  pool.query("SELECT * FROM role", (err, { rows }) => {
+    inquirer.prompt([
+      {
+        type: "input",
+        message: "What is the name of the role?",
+        name: "name",
+        validate: (input) => {
+          if (input.trim() === "") {
+            return "Please enter a valid role name.";
+          }
+          return true;
+        }
+      },
+      {
+        type: "input",
+        message: "What is the salary of the role?",
+        name: "salary",
+        validate: (input) => {
+          if (input.trim() === "") {
+            return "Please enter a valid salary.";
+          }
+          return true;
+        }
+      },
+      {
+        type: "list",
+        message: "What is the department of the role?",
+        name: "department",
+        choices: rows
+      }
+    ])
+    .then(res => {
+      pool.query(`INSERT INTO role (title, salary, department_id) VALUES ('${res.name}', ${res.salary}, ${res.department})`, (err) => {
+        console.log("New role has been added into system!");
+        mainMenu();
+      });
+    });
+  })  
+}
+
+function viewRoles() {
+  pool.query(`SELECT role.id, role.title, department.name as department, role.salary
+  FROM role
+  LEFT JOIN department ON department.id = role.department_id
+  ORDER BY role.id`, (err, { rows }) => {
+    printTable(rows);
+    mainMenu();
+  });
 }
