@@ -8,7 +8,7 @@ const pool = new Pool(
     user: process.env.USER_NAME,
     password: process.env.PASSWORD,
     host: 'localhost',
-    database: process.env.DBNAME
+    database: process.env.DB_NAME
   },
   console.log(`Connected to the books_db database.`)
 )
@@ -52,40 +52,48 @@ function mainMenu() {
 }
 
 function updateEmployeRole(){
-  pool.query("SELECT CONCAT(first_name,' ',last_name ) as name, id as value from employee", (err,{rows})=>{
-             
-    pool.query("SELECT title as name, id as value from role", (err,{rows:roleRows}) =>{
-        inquirer.prompt([
-          {
-            type:"list",
-            message:"Which employee's do you want to update?",
-            name:"employee",
-            choices:rows
-          },{
-            type:"list",
-            message:"Which role do you want to assign to the selected employee?",
-            name:"role",
-            choices:roleRows
+  pool.query("SELECT CONCAT(first_name,' ',last_name ) as name, id as value from employee", (err, result) => {
+    if (err) {
+      console.error('Error:', err);
+      return;
+    }
+    
+    pool.query("SELECT title as name, id as value from role", (err, roleResult) => {
+      if (err) {
+        console.error('Error:', err);
+        return;
+      }
+
+      inquirer.prompt([
+        {
+          type: "list",
+          message: "Which employee's do you want to update?",
+          name: "employee",
+          choices: result.rows
+        },{
+          type: "list",
+          message: "Which role do you want to assign to the selected employee?",
+          name: "role",
+          choices: roleResult.rows
+        }
+      ])
+      .then(res => {
+        pool.query(`update employee set role_id = ${res.role} where id=${res.employee}`, (err) => {
+          if (err) {
+            console.error('Error:', err);
+            return;
           }
-        ])
-        .then(res=>{
-            pool.query(`update employee set role_id = ${res.role} where id=${res.employee}`, (err)=>{
-                   console.log("Employee's role has been updated!")
-                   viewEmployees()
-
-            })
-        })      
-
-    })
-  })  
- 
-  
+          console.log("Employee's role has been updated!")
+          viewEmployees();
+        });
+      });      
+    });
+  });  
 }
 
 
 function addEmployee() {
   pool.query("SELECT title as name, id as value from role", (err, { rows }) => {
-    //Phil Loy
     pool.query("SELECT CONCAT(first_name,' ',last_name ) as name, id as value from employee ", (err, { rows: managerRows }) => {
 
       inquirer.prompt([
@@ -142,12 +150,14 @@ role.title, department.name as department, role.salary, CONCAT(employee_manager.
 FROM employee
 LEFT JOIN role ON role.id = employee.role_id
 LEFT JOIN department ON department.id = role.department_id
-LEFT JOIN employee as employee_manager ON employee.manager_id=employee_manager.id order by employee.id`, (err, { rows }) => {
-    printTable(rows)
-    mainMenu()
-
-  })
-
+LEFT JOIN employee as employee_manager ON employee.manager_id=employee_manager.id order by employee.id`, (err, result) => {
+    if (err) {
+      console.error('Error:', err);
+      return;
+    }
+    printTable(result.rows);
+    mainMenu();
+  });
 }
 
 function viewDepartments() {
@@ -183,7 +193,7 @@ function addDepartment() {
 }
 
 function addRole() {
-  pool.query("SELECT * FROM role", (err, { rows }) => {
+  pool.query("SELECT name, id as value FROM department", (err, { rows }) => {
     inquirer.prompt([
       {
         type: "input",
