@@ -2,7 +2,7 @@
 
 ## Description
 
-The Employee Tracker is a command-line application built with Node.js that allows users to manage a company's employee database. It provides functionalities to add, view, and update employee information, making it an essential tool for HR departments and managers who need to keep track of employee records efficiently.
+The Employee Tracker is a command-line application built with Node.js that allows users to manage a company's employee database. It provides functionalities to add, view, and update employee information, making it an essential tool to keep track of employee records efficiently.
 
 ## Table of Contents
 
@@ -19,8 +19,6 @@ The Employee Tracker is a command-line application built with Node.js that allow
 - Add new employees, roles, and departments.
 - View existing employees, roles, and departments.
 - Update employee roles and manager assignments.
-- Delete employees, roles, or departments as needed.
-- Generate reports on employee data.
 
 ## Technologies Used
 
